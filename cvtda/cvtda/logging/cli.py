@@ -14,7 +14,7 @@ class CLILogger(BaseLogger):
     def print(self, data: T) -> None:
         print(data)
 
-    def loop(
+    def pbar(
         self,
         data: typing.Iterable[T],
         total: int = None,
@@ -29,5 +29,5 @@ class CLILogger(BaseLogger):
     ):
         return tqdm.contrib.tzip(*iterables, desc = desc)
 
-    def set_pbar_postfix(self, pbar: typing.Any, data: dict):
+    def set_pbar_postfix(self, pbar: tqdm.tqdm, data: dict):
         pbar.set_postfix(data)

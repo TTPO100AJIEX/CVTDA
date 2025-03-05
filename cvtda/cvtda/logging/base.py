@@ -4,15 +4,24 @@ import typing
 T = typing.TypeVar("T")
 
 class BaseLogger(abc.ABC):
+    current_logger = None
+    
+    def __enter__(self):
+        self.__previous = BaseLogger.current_logger
+        BaseLogger.current_logger = self
+
+    def __exit__(self, *args):
+        BaseLogger.current_logger = self.__previous
+
     @abc.abstractmethod
     def print(self, data: T) -> None:
         pass
 
     @abc.abstractmethod
-    def loop(
+    def pbar(
         self,
         data: typing.Iterable[T],
-        total: int = None,
+        total: typing.Optional[int] = None,
         desc: typing.Optional[str] = None
     ) -> typing.Iterable[T]:
         pass
