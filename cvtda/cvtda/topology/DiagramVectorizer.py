@@ -16,7 +16,7 @@ class DiagramVectorizer(sklearn.base.TransformerMixin):
         reduced: bool = True,
 
         n_bins: int = 64,
-        batch_size: int = 4096,
+        batch_size: int = 512,
         filtering_percentile: int = 10,
         
         persistence_landscape_layers: int = 3,
