@@ -15,7 +15,6 @@ class NNClassifier(sklearn.base.ClassifierMixin):
     def __init__(
         self,
 
-        n_jobs: int = -1,
         random_state: int = 42,
 
         device: torch.device = torch.device("cuda"),
@@ -27,7 +26,6 @@ class NNClassifier(sklearn.base.ClassifierMixin):
         skip_images: bool = False,
         skip_features: bool = False
     ):
-        self.n_jobs_ = n_jobs
         self.random_state_ = random_state
 
         self.device_ = device
@@ -68,7 +66,7 @@ class NNClassifier(sklearn.base.ClassifierMixin):
                 val_pred = numpy.argmax(val_proba, axis = 1)
                 postfix['val_acc'] = sklearn.metrics.accuracy_score(val.labels, val_pred)
 
-            print(f"Epoch {epoch}:", postfix)
+            cvtda.logging.logger().print(f"Epoch {epoch}:", postfix)
 
         self.fitted_ = True
         return self
@@ -91,9 +89,9 @@ class NNClassifier(sklearn.base.ClassifierMixin):
         diagrams = [] if self.skip_diagrams_ else dataset.get_diagrams(diagram_idxs)
 
         is_no_topology = (self.skip_diagrams_ and self.skip_features_ and not self.skip_images_)
-        print('Topology: ', not is_no_topology)
-        print('Images: ', images.shape)
-        print('Features: ', features.shape)
+        cvtda.logging.logger().print('Topology: ', not is_no_topology)
+        cvtda.logging.logger().print('Images: ', images.shape)
+        cvtda.logging.logger().print('Features: ', features.shape)
 
         if is_no_topology:
             images_output = num_classes
