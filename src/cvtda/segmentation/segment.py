@@ -6,6 +6,7 @@ import pandas
 
 import cvtda.logging
 import cvtda.dumping
+import cvtda.neural_network
 
 from .Dataset import Dataset
 from .MiniUnet import MiniUnet
@@ -25,7 +26,7 @@ def segment(
     dump_name: typing.Optional[str] = None,
     only_get_from_dump: bool = False,
 
-    device: torch.device = torch.device('cuda'),
+    device: torch.device = cvtda.neural_network.default_device,
     batch_size: int = 64,
     learning_rate: float = 1e-3,
     n_epochs: int = 100,

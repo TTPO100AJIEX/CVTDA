@@ -1,6 +1,7 @@
 import os
 import typing
 
+import catboost.dev_utils
 import numpy
 import torch
 import pandas
@@ -42,7 +43,7 @@ def classify(
 
     random_forest_estimators: int = 100,
 
-    nn_device: torch.device = torch.device('cuda'),
+    nn_device: torch.device = cvtda.neural_network.default_device,
     nn_batch_size: int = 256,
     nn_learning_rate: float = 1e-3,
     nn_epochs: int = 100,
@@ -57,7 +58,7 @@ def classify(
 
     catboost_iterations: int = 600,
     catboost_depth: int = 4,
-    catboost_device: str = 'GPU'
+    catboost_device: str = ('GPU' if torch.cuda.is_available() else 'CPU')
 ):
     without_diagrams = (train_diagrams is None) and (test_diagrams is None)
 

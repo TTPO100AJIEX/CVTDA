@@ -2,14 +2,13 @@ import typing
 
 import numpy
 import joblib
-import sklearn.base
 import gtda.diagrams
 
 import cvtda.utils
 import cvtda.logging
 
 
-class DiagramVectorizer(sklearn.base.TransformerMixin):
+class DiagramVectorizer(cvtda.utils.FeatureExtractorBase):
     def __init__(
         self,
         n_jobs: int = -1,
@@ -27,6 +26,7 @@ class DiagramVectorizer(sklearn.base.TransformerMixin):
         self.fitted_ = False
         self.n_jobs_ = n_jobs
         self.reduced_ = reduced
+        self.feature_names_ = []
         self.batch_size_ = batch_size
         self.filtering_percentile_ = filtering_percentile
         
@@ -58,11 +58,16 @@ class DiagramVectorizer(sklearn.base.TransformerMixin):
         ]
 
 
+    def feature_names(self) -> typing.List[str]:
+        assert self.fitted_ is True, 'fit() must be called before feature_names()'
+        return self.feature_names_
+
     def fit(self, diagrams: numpy.ndarray):
         self.homology_dimensions_ = numpy.unique(diagrams[:, :, 2])
         
         self.filtering_epsilon_ = self.determine_filtering_epsilon_(diagrams)
         self.filtering_ = gtda.diagrams.Filtering(epsilon = self.filtering_epsilon_).fit(diagrams)
+        diagrams = self.filtering_.transform(diagrams)
 
         self.betti_curve_.fit(diagrams)
         
@@ -81,6 +86,10 @@ class DiagramVectorizer(sklearn.base.TransformerMixin):
         for persistence_image in self.persistence_images_:
             persistence_image.fit(diagrams)
 
+        feature_names = [ "betti", "landscape", "silhouette", "entropy", "number_of_points", "heat", "persistence_image", "lifetime" ]
+        for features, name in zip(self.transform_batch_raw_(diagrams[:self.batch_size_]), feature_names):
+            self.feature_names_.extend([ f"{name}-{i}" for i in range(features.shape[1]) ])
+    
         cvtda.logging.logger().print('DiagramVectorizer: fitting complete')
         self.fitted_ = True
         return self
@@ -89,17 +98,7 @@ class DiagramVectorizer(sklearn.base.TransformerMixin):
         assert self.fitted_ is True, 'fit() must be called before transform()'
         
         def transform_batch(batch: numpy.ndarray) -> numpy.ndarray:
-            batch = self.filtering_.transform(batch)
-            return numpy.hstack([
-                self.calc_betti_features_            (batch),
-                self.calc_landscape_features_        (batch),
-                self.calc_silhouette_features_       (batch),
-                self.calc_entropy_features_          (batch),
-                self.calc_number_of_points_features_ (batch),
-                self.calc_heat_features_             (batch),
-                self.calc_persistence_image_features_(batch),
-                self.calc_lifetime_features_         (batch)
-            ])
+            return numpy.hstack(self.transform_batch_raw_(batch))
         
         loop = range(0, len(diagrams), self.batch_size_)
         features = joblib.Parallel(return_as = 'generator', n_jobs = self.n_jobs_)(
@@ -108,12 +107,28 @@ class DiagramVectorizer(sklearn.base.TransformerMixin):
         )
 
         collector = cvtda.logging.logger().pbar(features, total = len(loop), desc = 'DiagramVectorizer: batch')
-        return numpy.vstack(list(collector))
+        features = numpy.vstack(list(collector))
+        assert features.shape == (len(diagrams), len(self.feature_names()))
+        return features
 
+    def transform_batch_raw_(self, batch: numpy.ndarray) -> numpy.ndarray:
+        batch = self.filtering_.transform(batch)
+        return [
+            self.calc_betti_features_            (batch),
+            self.calc_landscape_features_        (batch),
+            self.calc_silhouette_features_       (batch),
+            self.calc_entropy_features_          (batch),
+            self.calc_number_of_points_features_ (batch),
+            self.calc_heat_features_             (batch),
+            self.calc_persistence_image_features_(batch),
+            self.calc_lifetime_features_         (batch)
+        ]
 
 
     def determine_filtering_epsilon_(self, diagrams: numpy.ndarray) -> float:
         life = (diagrams[:, :, 1] - diagrams[:, :, 0]).flatten()
+        if len(numpy.unique(life)) == 1:
+            return 1e-8
         return numpy.percentile(life[life != 0], self.filtering_percentile_)
 
     def calc_perdim_sequence_stats_(self, data: numpy.ndarray) -> numpy.ndarray:
