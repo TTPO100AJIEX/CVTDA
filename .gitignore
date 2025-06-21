@@ -32,4 +32,7 @@ build/
 node_modules/
 package-lock.json
 
+dist/
+src/cv_tda.egg-info/
+
 !.gitkeep
