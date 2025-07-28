@@ -259,3 +259,17 @@ Typical messages arising from the library and the actions required to fix them a
         </tr>
     </tbody>
 </table>
+
+## Cite Us
+
+```
+@misc{Abramov2025,
+  title  = "A feature engineering framework for computer vision based on
+            topological data analysis",
+  author = "Abramov, Aleksandr and Chernyshev, Vsevolod and Mikhaylets,
+            Ekaterina and Kubarev, Aleksandr",
+  year   =  2025,
+  doi    =  "10.2139/ssrn.5253718",
+  url    =  "http://doi.org/10.2139/ssrn.5253718"
+}
+```
