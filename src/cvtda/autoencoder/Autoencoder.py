@@ -2,6 +2,7 @@ import typing
 
 import numpy
 import torch
+import torchvision
 import torch.utils.data
 
 import cvtda.utils
@@ -17,14 +18,15 @@ class Autoencoder:
         random_state: int = 42,
 
         device: torch.device = torch.device("cuda"),
-        batch_size: int = 256,
+        batch_size: int = 128,
         learning_rate: float = 1e-3,
-        n_epochs: int = 100,
+        n_epochs: int = 20,
         latent_dim: int = 256,
         
         skip_diagrams: bool = False,
         skip_images: bool = False,
-        skip_features: bool = False
+        skip_features: bool = False,
+        base = torchvision.models.resnet34
     ):
         self.random_state_ = random_state
 
@@ -37,6 +39,7 @@ class Autoencoder:
         self.skip_diagrams_ = skip_diagrams
         self.skip_images_ = skip_images
         self.skip_features_ = skip_features
+        self.base_ = base
 
 
     def fit(self, train: cvtda.neural_network.Dataset, val: typing.Optional[cvtda.neural_network.Dataset]):
@@ -110,7 +113,8 @@ class Autoencoder:
             skip_diagrams = self.skip_diagrams_,
             skip_images = self.skip_images_,
             skip_features = self.skip_features_,
-            images_n_channels = images.shape[1]
+            images_n_channels = images.shape[1],
+            base = self.base_
         ).to(self.device_).train()
         self.encoder_ = torch.nn.LazyLinear(self.latent_dim_).to(self.device_).train()
 
@@ -130,7 +134,7 @@ class Autoencoder:
 
         self.optimizer_ = torch.optim.AdamW(
             params = self.model_list_.parameters(),
-            lr = self.learning_rate_ * 100
+            lr = self.learning_rate_
         )
         
         def lr_scheduler_lambda(epoch):

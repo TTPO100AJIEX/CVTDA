@@ -2,10 +2,10 @@ import typing
 
 import numpy
 import torch
-import joblib
 import torch.utils.data
 import torchph.nn.slayer
 
+import cvtda.utils
 import cvtda.logging
 
 from .device import default_device
@@ -14,12 +14,12 @@ from .device import default_device
 def transform(diagram: torch.Tensor, dim: int):
     dim_filter = (diagram[:, 2] == dim)
     non_degenerate_filter = (diagram[:, 0] < diagram[:, 1])
-    rotation = torchph.nn.slayer.UpperDiagonalThresholdedLogTransform(0.01)
+    rotation = torchph.nn.slayer.LogStretchedBirthLifeTimeCoordinateTransform(0.01)
     return rotation(diagram[dim_filter & non_degenerate_filter][:, 0:2])
 
 def process_diagram(diags: torch.Tensor):
     diagrams, non_dummy_points = [], []
-    for dim in diags[:, :, 2].unique(sorted = False):
+    for dim in diags[:, :, 2].unique(sorted = True):
         diags_dim = [ transform(diag, dim) for diag in diags ]
         processed = torchph.nn.slayer.prepare_batch(diags_dim)
         diagrams.append(processed[0].cpu())
@@ -61,10 +61,8 @@ class Dataset(torch.utils.data.Dataset):
             torch.tensor(numpy.array([ item[num_diagram] for item in diagrams ]), dtype = torch.float32)
             for num_diagram in range(len(diagrams[0]))
         ]
-        diagrams = joblib.Parallel(n_jobs = self.n_jobs_)(
-            joblib.delayed(process_diagram)(d)
-            for d in cvtda.logging.logger().pbar(diagrams, desc = "Dataset: processing diagrams")
-        )
+        pbar = cvtda.logging.logger().pbar(diagrams, desc = "Dataset: processing diagrams")
+        diagrams = cvtda.utils.parallel(process_diagram, pbar, n_jobs = self.n_jobs_)
 
         self.diagrams, self.non_dummy_points = [], []
         for diag, ndp in diagrams:

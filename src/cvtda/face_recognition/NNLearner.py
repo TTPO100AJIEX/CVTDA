@@ -1,6 +1,7 @@
 import typing
 
 import torch
+import torchvision
 import torch.utils.data
 import pytorch_metric_learning.miners
 import pytorch_metric_learning.losses
@@ -19,23 +20,23 @@ class NNLearner(BaseLearner):
         self,
 
         n_jobs: int = -1,
-        lang: str = 'ru', # 'en'
         random_state: int = 42,
 
         device: torch.device = torch.device("cuda"),
-        batch_size: int = 64,
-        learning_rate: float = 1e-4,
+        batch_size: int = 32,
+        learning_rate: float = 1e-3,
         n_epochs: int = 25,
         length_before_new_iter: typing.Optional[int] = None,
 
-        margin: int = 1,
+        margin: int = 0.1,
         latent_dim: int = 256,
         
         skip_diagrams: bool = False,
         skip_images: bool = False,
-        skip_features: bool = False
+        skip_features: bool = False,
+        base = torchvision.models.resnet34
     ):
-        super().__init__(n_jobs, lang)
+        super().__init__(n_jobs)
         self.random_state_ = random_state
 
         self.device_ = device
@@ -50,6 +51,7 @@ class NNLearner(BaseLearner):
         self.skip_diagrams_ = skip_diagrams
         self.skip_images_ = skip_images
         self.skip_features_ = skip_features
+        self.base_ = base
 
 
     def fit(self, train: cvtda.neural_network.Dataset, val: typing.Optional[cvtda.neural_network.Dataset]):
@@ -145,7 +147,8 @@ class NNLearner(BaseLearner):
             skip_images = self.skip_images_,
             skip_features = self.skip_features_,
             images_n_channels = images.shape[1],
-            images_output = images_output
+            images_output = images_output,
+            base = self.base_
         ).to(self.device_).train()
 
         self.model_ = torch.nn.Sequential(
@@ -162,7 +165,7 @@ class NNLearner(BaseLearner):
 
         self.optimizer_ = torch.optim.AdamW(
             params = self.model_list_.parameters(),
-            lr = self.learning_rate_ * 100
+            lr = self.learning_rate_
         )
         
         def lr_scheduler_lambda(epoch):
