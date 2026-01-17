@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cv-tda"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   { name = "Aleksandr Abramov", email = "ggttpo100ajiex@yandex.ru" },
 ]
@@ -15,7 +15,7 @@ dependencies = [
   "giotto-tda==0.6.2",
   "gudhi",
   "joblib",
-  "scikit-learn",
+  "scikit-learn>=1.4",
   "scikit-image",
   "tqdm",
   "numpy"
