@@ -1,1 +1,3 @@
 gtsrb/
+cvtda_results/*
+!zigzag_results/gtsrb/
