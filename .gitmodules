@@ -1,0 +1,3 @@
+[submodule "ZigZagLLMs"]
+	path = ZigZagLLMs
+	url = https://github.com/RitAreaSciencePark/ZigZagLLMs
