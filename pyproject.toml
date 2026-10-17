@@ -68,6 +68,11 @@ segmentation = [
   "torch",
   "segmentation-models-pytorch"
 ]
+zigzag = [
+  "cv-tda[classification]",
+  "scipy",
+  "dionysus>=2.1.1",
+]
 
 [project.urls]
 Repository  = "https://github.com/TTPO100AJIEX/CVTDA"

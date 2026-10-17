@@ -12,6 +12,8 @@ The library comes with four optional packages providing methods to solve classif
 
 Please note that the library requires Python 3.10. Correct functioning with other versions of the interpreter is not guaranteed.
 
+For neural representation analysis, install `cv-tda[zigzag]` (or `python -m pip install -e '.[zigzag]'` from the repository root for development). The `cvtda.zigzag` package provides layer representations (`nn`), zigzag persistence and plots (`topology`), analysis pipelines (`pipelines`), latent-space topology (`space`), and persistent caches (`cvtda.dumping.UniversalDumper`). This extra builds on `classification`, whose quality metrics are reused during training, and adds SciPy and Dionysus. The study-2 scripts and notebooks remain in `CourseProject-Mag-1`; run them there after installing the package.
+
 We identified no limitations in using the tools on various operating systems.
 
 There are no CPU requirements, but limiting the resource availability will increase the running time of most methods. The amount of RAM required depends on the quantity and size of analyzed images: at least 32 GB is required to process 60,000 color photographs of size 48 x 48. A GPU is not required to use the library, although it can speed up the operation of individual functions.
@@ -97,7 +99,7 @@ with CustomLogger():
 
 ### Backup utilities
 
-The `dumping` package implements a similar context-based mechanism to backup intermediate results and restore them from persistent storage. The `BaseDumper` class describes the interface of the corresponding methods, and two implementations are supplied with the library, `NumpyDumper` and `DevNullDumper`, which allow you to save numpy arrays to disk and disable backup processes, respectively. To choose the implementation, you should create a context, initializing the corresponding class:
+The `dumping` package implements a similar context-based mechanism to backup intermediate results and restore them from persistent storage. The `BaseDumper` class describes the interface. `NumpyDumper` saves numpy arrays to disk, while `DevNullDumper` disables backups. `UniversalDumper` additionally supports tensors, neural models, pandas tables, sparse matrices, and nested lists. To choose the implementation, you should create a context, initializing the corresponding class:
 
 ```python
 with NumpyDumper():
